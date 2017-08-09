@@ -1,0 +1,89 @@
+### HTTP
+原始消息头保存在rawHeaders,它是一个 [key, value, key2, value2, ...] 数组。
+agent.getName(options),为请求选项的集合获取一个唯一的名称，用来判断一个连接是否可以被复用。
+agent.maxFreeSockets可设置要保留的空闲 socket 的最大数量
+agent.maxSockets可设置代理为每个来源打开的并发 socket 的最大数量
+process.argv属性返回一个数组，其中包含启动Node.js进程时传递的命令行参数。
+ 第一个元素将是process.execPath。 如果需要访问argv [0]的原始值，请参阅process.argv0。 
+ 第二个元素将是要执行的JavaScript文件的路径。 其余元素将是任何其他命令行参数。
+
+#### socket.io
+Socket.IO背后的主要思想是，您可以发送和接收任何您想要的事件，并提供所需的任何数据。任何可以编码为JSON的对象都可以做，二进制数据也被支持。
+
+### 客户端A引入socket模块 连接服务器地址 才可发送数据
+let socket=io('http://127.0.0.1:3000',{transports:['websocket']});
+
+### 服务器端 
+需要搭建一个http或https服务判断客户端是否连通状
+
+//获取所有房间（分组）信息   key为房间名，value为房间名对应的socket ID数组
+  io.sockets.manager.rooms
+//来获取此socketid进入的房间信息
+  io.sockets.manager.roomClients[socket.id]
+
+//获取particular room中的客户端，返回所有在此房间的socket实例
+每个socket在连接成功后会自动创建一个默认个聊天室,这个聊天室的名字是当前socket的id,可以通过默认聊天室实现向特定用户发送消息
+socket.id
+
+向固定房间播消息
+io.to('some room').emit('some event');
+
+
+io.eio.clientsCount  // 链接数量
+socket.adapter.rooms // 所有房间
+socket.nsp.connected // 所有链接
+
+
+6.13 未完成工作
+1、我的id
+2、对方的id
+3、我所有的房间  （一个数组）rooms
+4、我所有的聊天列表 chatList
+
+
+
+6.15遇见问题
+1、客户端判断是否消息发送到服务器
+2、服务器检测客户端是否接收到消息
+3、消息队列的问题    （类似于Array 的shift的方法）
+4、媒体的传输  (文件需要编码)
+5、连接数
+6、吞吐量 和吞吐率
+7、内存和缓存的问题的 
+
+
+服务器端设置 用socket.write方法写入测试
+ pingInterval （heartbeat interval）  心跳间隔
+ pingTimeout  （heartbeat timeout） 心跳超时
+客户端设置
+heartbeatTimeout
+心跳包解决方案：
+客户端每隔一定的时间setInterval发送一个包含时间的包，传向服务器；
+服务器每隔一定的时间段接收一个包；
+将客户端传过来的包进行解析获取里面的时间戳，和自己getTime()的时间比对，超过一定的时间就认为客户端已经断开连接
+
+
+Engine.IO：实时引擎
+通讯问题: 服务器是不能主动连接客户端的，只能客户端主动连接服务器
+
+###通讯的有四种方式（短轮询、长轮询、SSE、Websocket）
+
+
+
+事件名称	      事件说明	          事件回调参数说明
+connect	              连接成功的事件	  无参数
+connect_failed	      连接失败的事件	  参数Object，里面包含错误信息
+disconnect	      断开连接的事件	  无参数
+connecting	      正在链接的事件	  无参数
+error	              连接错误事件处理	
+connect_timeout	      连接超时的事件	  无参数
+reconnect	      成功重新连接的事件  参数Number，重连的次数
+reconnecting	      正在重新连接	  参数Number，重连的次数
+reconnect_failed      重新连接失败	  无参数
+
+
+将socket连接的时间放短如果客户端没有响应，15秒就释放资源
+socket.manager.transports[socket.id].socket.setTimeout(15000);
+
+
+

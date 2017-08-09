@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Document</title>
+</head>
+<style>
+    #msglog, #messageInput {
+        border: 1px solid #ccc;
+        width: 500px;
+        height: 350px;
+        overflow-y: auto;
+        font-size: 14px;
+    }
+    #messageInput {
+        height: 80px;
+    }
+    .message {
+        line-height: 22px;
+    }
+    .message .user {
+        padding-right: 5px;
+        padding-left: 5px;
+        color: brown;
+    }
+    .sysMsg {
+        color: #c1bfbf;
+        padding-right: 5px;
+        padding-left: 5px;
+        font-size: 12px;
+    }
+    #users {
+        width: 490px;
+        padding: 0 5px 5px;
+    }
+</style>
+<body>
+    昵称: <span id="userName"></span> <br/>
+    房间: <span id="roomID"></span> <br/>
+    当前在线人数: <span id="count">{{users.length}}</span> <br/>
+    在线用户:  <div id="users">{{users}}</div>
+
+    <div id="msglog">
+
+    </div>
+    <textarea name="message" id="messageInput"></textarea>
+    <br/>
+    按Enter键发送
+    <button id="joinOrLeave">退出房间</button>
+    <div id="sss" style="width:100px;height: 20px;background: #eee;"></div>
+</body>
+<!--<script src="https://cdn.socket.io/socket.io-1.2.1.js"></script>-->
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script>
+    $(function () {
+      const socket= io('http://127.0.0.1:8088');
+      //添加昵称
+      var userName = '';
+      while ($('#userName').text().trim() === '') {
+        userName = prompt("请设置你的昵称","");
+        $('#userName').text(userName);
+      }
+      socket.emit("adduse",userName);
+      setInterval(function(){
+        var time=new Date().getTime();
+        //发送心跳包
+        socket.emit('monitor',userName)
+      },5000);
+      // 发送消息
+      $('#messageInput').keydown(function (e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          var msg = $(this).val();
+          $(this).val('');
+          var arr=[];
+          arr.push(msg);
+          arr.push(userName)
+          socket.emit("msg",arr);
+        }
+      });
+      socket.on("msg1",function (data) {
+        $("#msglog").append("<div>"+data+"</div>")
+      });
+    //房间
+      socket.on("addroom",function (data) {
+        $("#roomID").html(data)
+      });
+      socket.on('disconnect',()=>{
+        console.log("已断开连接");
+        //需要把未发送的消息放进缓存
+      });
+    })
+</script>
+</html>
